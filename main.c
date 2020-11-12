@@ -5,6 +5,14 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdbool.h>
 
 typedef struct fd_pool {
     size_t num_tcp_fds;
@@ -16,6 +24,8 @@ typedef struct fd_pool {
 } fd_pool_t;
 
 fd_pool_t *new_fd_pool_t(void);
+void get_active_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp, bool read);
+
 void get_all_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp);
 bool is_set_fd_pool_t(fd_pool_t *fpool, int fd, bool is_tcp);
 void set_fd_pool_t(fd_pool_t *fpool, int fd, bool is_tcp);
@@ -34,6 +44,28 @@ fd_pool_t *new_fd_pool_t(void) {
     pthread_rwlock_init(&fpool->udp_lock, NULL);
 
     return fpool;
+}
+void get_active_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp, bool write) { 
+    fd_set check_set, read_set, write_set;
+    int num_fds = 0;
+    if (tcp) {
+        pthread_rwlock_rdlock(&fpool->tcp_lock);
+        check_set = fpool->tcp_set;
+        num_fds = fpool->num_tcp_fds;
+        pthread_rwlock_unlock(&fpool->tcp_lock);
+    } else {
+        pthread_rwlock_rdlock(&fpool->udp_lock);
+        check_set = fpool->udp_set;
+        num_fds = fpool->num_udp_fds;
+        pthread_rwlock_unlock(&fpool->udp_lock);        
+    }
+    if (write) {
+        write_set = check_set;
+    } else {
+        read_set = check_set;
+    }
+    // todo: not yet done, just a basic layout
+    select(num_fds, &read_set, &write_set, NULL, NULL);
 }
 
 void get_all_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp) {
