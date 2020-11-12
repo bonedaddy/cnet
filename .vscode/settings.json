@@ -1,0 +1,32 @@
+{
+    "files.associations": {
+        "*.c": "c",
+        "cstring": "c",
+        "*.tcc": "cpp",
+        "chrono": "cpp",
+        "ctime": "cpp",
+        "future": "cpp",
+        "limits": "cpp",
+        "numeric": "cpp",
+        "ratio": "cpp",
+        "streambuf": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "*.cuh": "cpp",
+        "algorithm": "cpp",
+        "condition_variable": "cpp",
+        "array": "c",
+        "hash_map": "c",
+        "hash_set": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "cerrno": "c",
+        "system_error": "c",
+        "logger.h": "c"
+    },
+    "C_Cpp.default.cStandard": "c18",
+    "devskim.enableBestPracticeRules": true,
+    "devskim.enableManualReviewRules": true,
+    "devskim.enableSuppressionInfo": true
+}
