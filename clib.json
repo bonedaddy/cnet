@@ -1,0 +1,22 @@
+
+{
+  "name": "cnet",
+  "version": "0.0.1",
+  "license": "agpl-v3",
+  "description": "C's equivalent to Golang's stdlib net package",
+  "repo": "bonedaddy/cnet",
+  "keywords": [
+    "networking",
+    "sockets"
+  ],
+  "dependencies": {
+    "pthreads": "",
+    "bonedaddy/ulog": "0.0.3-rc2"
+  },
+  "src": [
+    "./fd_pool.h",
+    "./fd_pool.c",
+    "./sockets.h",
+    "./sockets.h"
+  ]
+}
