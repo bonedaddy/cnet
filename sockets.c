@@ -8,7 +8,6 @@
 #include "sockets.h"
 #include "deps/ulog/logger.h"
 
-
 /*!
   * @brief attempts to create a socket listening on the specified ip and port
   * @details this is a helper function to abstract away the verbosity required to create a socket
