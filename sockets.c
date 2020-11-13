@@ -29,7 +29,8 @@ socket_client_t *new_client_socket(thread_logger *thl, char *ip, char *port, boo
         hints.ai_family = AF_INET6;
     }
 
-    //hints.ai_flags = AI_PASSIVE;
+    // todo: should we do this?
+    hints.ai_flags = AI_PASSIVE;
 
     addr_info *peer_address;
     int rc = getaddrinfo(ip, port, &hints, &peer_address);

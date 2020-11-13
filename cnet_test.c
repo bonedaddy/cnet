@@ -217,7 +217,6 @@ void test_listen_socket(void **state) {
     // TODO: enable better testing by testing all fds
     for (;;) {
         int num_active = get_active_fd_pool_t(fpool, &active_set_tcp, true, true);  // read (tcp)
-        LOGF_DEBUG(thl, 0, "found %i available fds. write %i, tcp %i", num_active, false, true);
         if (num_active > 0) {
             // active 
             break;
