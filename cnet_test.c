@@ -5,6 +5,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <stdbool.h>
+#include <string.h>
 #include "fd_pool.h"
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -33,7 +34,7 @@ void test_fd_pool(void **state) {
     fd_pool_t *fpool = new_fd_pool_t();
     assert(fpool != NULL);
     
-    size_t want_tcp;
+    size_t want_tcp = 0;
     // test tcp
     for (int i = 0; i < tests[0].num_fds; i++) {
         
@@ -46,9 +47,16 @@ void test_fd_pool(void **state) {
         bool is_set = is_set_fd_pool_t(fpool, tests[0].fds[i], true);
         assert(is_set == true);
 
+        int buffer[10];
+        size_t buffer_len = 10;
+        memset(buffer, 0, 10);
+
+        int fd_count = get_all_fd_pool_t(fpool, buffer, buffer_len, true);
+        printf("%i\n", fd_count);
+        assert(fd_count == want_tcp);
     }
 
-    size_t want_udp;
+    size_t want_udp = 0;
     // test udp
     for (int i = 0; i < tests[1].num_fds; i++) {
         
