@@ -6,7 +6,7 @@
 
 # details
 
-Although C isn't tremendously difficult, writing network code in C is a process that I find to be excessively verbose. Compared to Go which you can create a network listener in less than 10 lines of code, accomplishing the same thing with C takes roughly 50 -> 150 lines of code. While it's not fair to expect C to be as simple to use as Go, part of this problem with verbosity is caused by there being no real C equivalent of Golang's stdlib `net` packet.
+Although C isn't tremendously difficult, writing network code in C is a process that I find to be excessively verbose. Compared to Go which you can create a network listener in less than 10 lines of code, accomplishing the same thing with C takes roughly 50 -> 150 lines of code. While it's not fair to expect C to be as simple to use as Go, part of this problem with verbosity is caused by there being no real C equivalent of Golang's stdlib `net` packet. By solving this, you can leverage modern C compiler niceness to create a usage experience that is only moderately more difficult to use than Go's `net`.
 
 # features
 
