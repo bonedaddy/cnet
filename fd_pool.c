@@ -41,7 +41,7 @@ fd_pool_t *new_fd_pool_t(void) {
   * @param read if true only check for read sockets, if false only check for write sockets
   * @todo enable supplying custom timeouts
 */
-void get_active_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp, bool write) { 
+int get_active_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp, bool write) { 
     fd_set check_set, read_set, write_set;
     int num_fds = 0;
     if (tcp) {
@@ -62,6 +62,7 @@ void get_active_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool
     }
     // todo: not yet done, just a basic layout
     select(num_fds, &read_set, &write_set, NULL, NULL);
+    return -1;
 }
 
 /*!
@@ -70,10 +71,10 @@ void get_active_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool
   * @param buffer_len the number of items the array can store, this means we will get no more than this number of available fds
   * @param tcp if true check tcp_set, if false check udp_set
 */
-void get_all_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp) {
+int get_all_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp) {
+    size_t num_items = 0;
     if (tcp) {
         pthread_rwlock_rdlock(&fpool->tcp_lock);
-        size_t num_items = 0;
         for (int i = 1; i <= 65536; i++) {
             if (FD_ISSET(i, &fpool->tcp_set)) {
                 buffer[num_items] = i;
@@ -86,7 +87,6 @@ void get_all_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tc
         pthread_rwlock_unlock(&fpool->tcp_lock);
     } else {
         pthread_rwlock_rdlock(&fpool->udp_lock);
-        size_t num_items = 0;
         for (int i = 1; i <= 65536; i++) {
             if (FD_ISSET(i, &fpool->udp_set)) {
                 buffer[num_items] = i;
@@ -98,6 +98,7 @@ void get_all_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tc
         }
         pthread_rwlock_unlock(&fpool->udp_lock);
     }
+    return (int)num_items;
 }
 
 /*!

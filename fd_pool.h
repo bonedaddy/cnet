@@ -37,17 +37,19 @@ fd_pool_t *new_fd_pool_t(void);
   * @param buffer_len the number of items the array can store, this means we will get no more than this number of available fds
   * @param tcp if true check tcp_set, if false check udp_set
   * @param read if true only check for read sockets, if false only check for write sockets
+  * @return number of fds
   * @todo enable supplying custom timeouts
 */
-void get_active_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp, bool read);
+int get_active_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp, bool read);
 
 /*!
   * @brief returns the file descriptors from tcp_set or udp_set, without checking to see if any are available for read/write
   * @param buffer location in memory to write available fds into, for memory efficiency use a stack-alloc'd array
   * @param buffer_len the number of items the array can store, this means we will get no more than this number of available fds
   * @param tcp if true check tcp_set, if false check udp_set
+  * @return number of fds
 */
-void get_all_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp);
+int get_all_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp);
 
 /*!
   * @brief checks to see if we have the given fd as part of our pool
