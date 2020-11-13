@@ -47,8 +47,6 @@ fd_pool_t *new_fd_pool_t(void) {
  * @todo enable supplying custom timeouts
  */
 int get_active_fd_pool_t(fd_pool_t *fpool, fd_set *check_set, bool tcp, bool read) {
-    fd_set *read_set = NULL;
-    fd_set *write_set = NULL;
     int max_fds = 0;
     if (tcp) {
         pthread_rwlock_rdlock(&fpool->tcp_lock);
@@ -61,15 +59,22 @@ int get_active_fd_pool_t(fd_pool_t *fpool, fd_set *check_set, bool tcp, bool rea
         max_fds = unsafe_max_socket_fd_pool_t(fpool, false);
         pthread_rwlock_unlock(&fpool->udp_lock);
     }
-    if (read) {
-        read_set = check_set;
-    } else {
-        write_set = check_set;
-    }
+
     struct timeval timeout;
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 50;
-    int num_active = select(max_fds + 1, read_set, write_set, NULL, &timeout);
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+    int num_active = 0;
+
+    if (read) {
+        num_active = select(max_fds + 1, check_set, NULL, NULL, &timeout);
+    } else {
+        num_active = select(max_fds + 1, NULL, check_set, NULL, &timeout);
+    }
+
+    if (num_active < 0) {
+        printf("socket select failed with error %s\n", strerror(errno));
+    }
+    
     return num_active;
 }
 
