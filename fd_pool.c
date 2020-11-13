@@ -77,6 +77,7 @@ int get_all_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp
         pthread_rwlock_rdlock(&fpool->tcp_lock);
         for (int i = 1; i <= 65536; i++) {
             if (FD_ISSET(i, &fpool->tcp_set)) {
+                printf("fd %i is set\n", i);
                 buffer[num_items] = i;
                 num_items += 1;
                 if (num_items == buffer_len) {
