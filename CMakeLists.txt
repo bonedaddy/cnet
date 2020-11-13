@@ -54,5 +54,9 @@ add_library(libfdpool ./fd_pool.c ./fd_pool.h)
 target_compile_options(libfdpool PRIVATE ${flags})
 target_link_libraries(libfdpool pthread)
 
+
 add_executable(cnet-test ./cnet_test.c)
 target_link_libraries(cnet-test cmocka libfdpool pthread)
+add_test(NAME CnetTest COMMAND cnet-test)
+
+enable_testing()

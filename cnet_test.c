@@ -4,9 +4,67 @@
 #include <stddef.h>
 #include <setjmp.h>
 #include <cmocka.h>
+#include <stdbool.h>
 #include "fd_pool.h"
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+
+void test_fd_pool(void **state) {
+    typedef struct args {
+        int fds[10];
+        int num_fds;
+        bool tcp;
+    } args_t;
+
+    args_t tests[2];
+
+    tests[0].fds[0] = 1;
+    tests[0].fds[1] = 5;
+    tests[0].fds[2] = 10;
+    tests[0].num_fds = 3;
+    tests[0].tcp = true;
+
+    tests[1].fds[0] = 100;
+    tests[1].fds[1] = 150;
+    tests[1].fds[2] = 200;
+    tests[1].num_fds = 3;
+    tests[1].tcp = false;
+
+    fd_pool_t *fpool = new_fd_pool_t();
+    assert(fpool != NULL);
+    
+    size_t want_tcp;
+    // test tcp
+    for (int i = 0; i < tests[0].num_fds; i++) {
+        
+        set_fd_pool_t(fpool, tests[0].fds[i], true);
+        want_tcp += 1;
+
+        assert(fpool->num_tcp_fds == want_tcp);
+        assert(fpool->num_udp_fds == 0);
+        
+        bool is_set = is_set_fd_pool_t(fpool, tests[0].fds[i], true);
+        assert(is_set == true);
+
+    }
+
+    size_t want_udp;
+    // test udp
+    for (int i = 0; i < tests[1].num_fds; i++) {
+        
+        set_fd_pool_t(fpool, tests[1].fds[i], false);
+        want_udp += 1;
+
+        assert(fpool->num_udp_fds == want_udp);
+        assert(fpool->num_tcp_fds == want_tcp);
+        
+        bool is_set = is_set_fd_pool_t(fpool, tests[1].fds[i], false);
+        assert(is_set == true);
+
+    }
+
+}
+
 
 void test_basic(void **state) {
     fd_pool_t *fpool = new_fd_pool_t();
@@ -52,6 +110,7 @@ void test_basic(void **state) {
 
 int main(void) {
     const struct CMUnitTest tests[] = {
+        cmocka_unit_test(test_fd_pool),
         cmocka_unit_test(test_basic),
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
