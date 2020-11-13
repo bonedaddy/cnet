@@ -180,20 +180,36 @@ void test_listen_socket(void **state) {
     int sockets[8];
     memset(sockets, 0, 8);
 
+    fd_pool_t *fpool = new_fd_pool_t();
+    assert(fpool != NULL);
+
     for (int i = 0; i < 8; i++) {
         // todo: enable ipv4/ipv6 selection
         int sock_num = listen_socket(thl, tests[i].addr, tests[i].port, tests[i].tcp, tests[i].ipv4, tests[i].sock_opts, tests[i].num_sock_opts);
         assert(sock_num > 0);
+        set_fd_pool_t(fpool, sock_num, tests[i].tcp);
         LOGF_DEBUG(thl, 0, "loop %i passed, socket is %i", i, sock_num);
         sockets[i] = sock_num;
     }
     
+    LOG_DEBUG(thl, 0, "getting available sockets");
+    fd_set active_set_tcp, active_set_udp;
+    int num_active = get_active_fd_pool_t(fpool, &active_set_tcp, true, true);  // read (tcp)
+    LOGF_DEBUG(thl, 0, "found %i available fds. write %i, tcp %i", num_active, false, true);
+    num_active = get_active_fd_pool_t(fpool, &active_set_tcp, true, false); // write (tcp);
+    LOGF_DEBUG(thl, 0, "found %i available fds. write %i, tcp %i", num_active, true, true);
+    num_active = get_active_fd_pool_t(fpool, &active_set_udp, false, true);  // read (udp)
+    LOGF_DEBUG(thl, 0, "found %i available fds. write %i, tcp %i", num_active, false, false);
+    num_active = get_active_fd_pool_t(fpool, &active_set_udp, false, false); // write (udp);
+    LOGF_DEBUG(thl, 0, "found %i available fds. write %i, tcp %i", num_active, true, false);
+
     LOG_DEBUG(thl, 0, "closing opened sockets (if any)");
     for (int i = 0; i < 8; i++) {
         close(sockets[i]);
     }
 
     clear_thread_logger(thl);
+    free_fd_pool_t(fpool);
 }
 
 
