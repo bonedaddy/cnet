@@ -76,6 +76,18 @@ void test_fd_pool(void **state) {
         assert(fd_count == want_udp);
     }
 
+    fd_set tcp_copy, udp_copy;
+    unsafe_copy_fd_pool_t(fpool, &tcp_copy, true);
+    unsafe_copy_fd_pool_t(fpool, &udp_copy, false);
+
+    assert(FD_ISSET(1, &tcp_copy));
+    assert(FD_ISSET(5, &tcp_copy));
+    assert(FD_ISSET(10, &tcp_copy));
+
+    assert(FD_ISSET(100, &udp_copy));
+    assert(FD_ISSET(150, &udp_copy));
+    assert(FD_ISSET(200, &udp_copy));
+
     free_fd_pool_t(fpool);
 }
 
@@ -88,53 +100,98 @@ void test_listen_socket(void **state) {
         SOCKET_OPTS sock_opts[10];
         int num_sock_opts;
         bool tcp;
+        bool ipv4;
     } args_t;
 
-    args_t tests[4];
-    
+    args_t tests[8];
+
+    // ipv4 tcp - reuse & noblock
     tests[0].addr = "127.0.0.1";
     tests[0].port = "5001";
     tests[0].sock_opts[0] = REUSEADDR;
     tests[0].sock_opts[1] = NOBLOCK;
     tests[0].num_sock_opts = 2;
     tests[0].tcp = true;
+    tests[0].ipv4 = true;
 
+    // ipv4 tcp - reuse & block
     tests[1].addr = "127.0.0.1";
     tests[1].port = "5002";
     tests[1].sock_opts[0] = REUSEADDR;
     tests[1].sock_opts[1] = BLOCK;
     tests[1].num_sock_opts = 2;
     tests[1].tcp = true;
+    tests[1].ipv4 = true;
 
+    // ipv4 udp - reuse & noblock
     tests[2].addr = "127.0.0.1";
     tests[2].port = "5001";
     tests[2].sock_opts[0] = REUSEADDR;
     tests[2].sock_opts[1] = NOBLOCK;
     tests[2].num_sock_opts = 2;
     tests[2].tcp = false;
+    tests[2].ipv4 = true;
 
+    // ipv4 udp - reuse & block
     tests[3].addr = "127.0.0.1";
     tests[3].port = "5002";
     tests[3].sock_opts[0] = REUSEADDR;
     tests[3].sock_opts[1] = BLOCK;
     tests[3].num_sock_opts = 2;
     tests[3].tcp = false;
+    tests[3].ipv4 = true;
 
-    for (int i = 0; i < 4; i++) {
+    // ipv6 tcp - reuse & noblock
+    tests[4].addr = "::1";
+    tests[4].port = "5001";
+    tests[4].sock_opts[0] = REUSEADDR;
+    tests[4].sock_opts[1] = NOBLOCK;
+    tests[4].num_sock_opts = 2;
+    tests[4].tcp = true;
+    tests[4].ipv4 = false;
+
+    // ipv6 tcp - reuse & block
+    tests[5].addr = "::1";
+    tests[5].port = "5002";
+    tests[5].sock_opts[0] = REUSEADDR;
+    tests[5].sock_opts[1] = BLOCK;
+    tests[5].num_sock_opts = 2;
+    tests[5].tcp = true;
+    tests[5].ipv4 = false;
+
+    // ipv6 udp - reuse & noblock
+    tests[6].addr = "::1";
+    tests[6].port = "5001";
+    tests[6].sock_opts[0] = REUSEADDR;
+    tests[6].sock_opts[1] = NOBLOCK;
+    tests[6].num_sock_opts = 2;
+    tests[6].tcp = false;
+    tests[6].ipv4 = false;
+
+    // ipv6 udp - reuse & block
+    tests[7].addr = "::1";
+    tests[7].port = "5002";
+    tests[7].sock_opts[0] = REUSEADDR;
+    tests[7].sock_opts[1] = BLOCK;
+    tests[7].num_sock_opts = 2;
+    tests[7].tcp = false;
+    tests[7].ipv4 = false;
+
+    int sockets[8];
+    memset(sockets, 0, 8);
+
+    for (int i = 0; i < 8; i++) {
         // todo: enable ipv4/ipv6 selection
-        int sock_num = listen_socket(thl, tests[i].addr, tests[i].port, tests[i].tcp, true, tests[i].sock_opts, tests[i].num_sock_opts);
-        if (tests[i].tcp == false) {
-            // right now udp is unsupported so this should err
-            assert(sock_num <= 0);
-        } else {
-            assert(sock_num > 0);
-            close(sock_num);
-        }
-        LOGF_DEBUG(thl, 0, "loop %i passed", i);
+        int sock_num = listen_socket(thl, tests[i].addr, tests[i].port, tests[i].tcp, tests[i].ipv4, tests[i].sock_opts, tests[i].num_sock_opts);
+        assert(sock_num > 0);
+        LOGF_DEBUG(thl, 0, "loop %i passed, socket is %i", i, sock_num);
+        sockets[i] = sock_num;
     }
-
-
-
+    
+    LOG_DEBUG(thl, 0, "closing opened sockets (if any)");
+    for (int i = 0; i < 8; i++) {
+        close(sockets[i]);
+    }
 
     clear_thread_logger(thl);
 }
