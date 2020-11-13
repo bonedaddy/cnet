@@ -37,34 +37,38 @@ fd_pool_t *new_fd_pool_t(void) {
 
 /*!
   * @brief polls all tcp or udp fds to determine which can be used for read/write
-  * @param buffer location in memory to write available fds into, for memory efficiency use a stack-alloc'd array
-  * @param buffer_len the number of items the array can store, this means we will get no more than this number of available fds
+  * @param check_set pointer to an fd_set variable which we will write the active fds into
+  * @param check_set note that this set will be zero'd within the function call
   * @param tcp if true check tcp_set, if false check udp_set
   * @param read if true only check for read sockets, if false only check for write sockets
+  * @return number of fds
   * @todo enable supplying custom timeouts
 */
-int get_active_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp, bool write) { 
-    fd_set check_set, read_set, write_set;
-    int num_fds = 0;
+int get_active_fd_pool_t(fd_pool_t *fpool, fd_set *check_set, bool tcp, bool read) { 
+    fd_set *read_set = NULL;
+    fd_set *write_set = NULL;
+    int max_fds = 0;
     if (tcp) {
         pthread_rwlock_rdlock(&fpool->tcp_lock);
-        check_set = fpool->tcp_set;
-        num_fds = fpool->num_tcp_fds;
+        unsafe_copy_fd_pool_t(fpool, check_set, true);
+        max_fds = unsafe_max_socket_fd_pool_t(fpool, true);
         pthread_rwlock_unlock(&fpool->tcp_lock);
     } else {
         pthread_rwlock_rdlock(&fpool->udp_lock);
-        check_set = fpool->udp_set;
-        num_fds = fpool->num_udp_fds;
+        unsafe_copy_fd_pool_t(fpool, check_set, false);
+        max_fds = unsafe_max_socket_fd_pool_t(fpool, false);
         pthread_rwlock_unlock(&fpool->udp_lock);        
     }
-    if (write) {
-        write_set = check_set;
-    } else {
+    if (read) {
         read_set = check_set;
+    } else {
+        write_set = check_set;
     }
-    // todo: not yet done, just a basic layout
-    select(num_fds, &read_set, &write_set, NULL, NULL);
-    return -1;
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 50;
+    int num_active = select(max_fds + 1, read_set, write_set, NULL, &timeout);
+    return num_active;
 }
 
 /*!
