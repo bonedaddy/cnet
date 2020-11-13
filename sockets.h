@@ -34,6 +34,16 @@ typedef struct sockaddr sock_addr;
  */
 typedef struct sockaddr_storage sock_addr_storage;
 
+/*! @typedef socket_client
+ * @struct socket_client
+ * a generic tcp/udp socket client
+ */
+typedef struct socket_client {
+    int socket_number;
+    addr_info *peer_address;
+} socket_client_t;
+
+
 /*! @enum SOCKET_OPTS
  * @brief used to configure new sockets
  */
@@ -50,6 +60,12 @@ SOCKET_OPTS default_sock_opts[] = {REUSEADDR, BLOCK};
 int default_socket_opts_count = 2;
 
 /*!
+ * @brief creates a new client socket
+ * @todo should we enable usage of socket options
+ */
+socket_client_t *new_client_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4);
+
+/*!
  * @brief attempts to create a socket listening on the specified ip and port
  * @details this is a helper function to abstract away the verbosity required to
  * create a socket
@@ -64,8 +80,8 @@ int listen_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4,
  * address
  */
 int get_new_socket(thread_logger *thl, addr_info *bind_address,
-                   SOCKET_OPTS sock_opts[], int num_opts);
-
+                   SOCKET_OPTS sock_opts[], int num_opts, bool client, bool tcp);
+                   
 /*! @brief used to enable/disable blocking sockets
  * @return Failure: false
  * @return Success: true
@@ -82,3 +98,5 @@ char *get_name_info(sock_addr *client_address);
  * defaults is IPv4, TCP, and AI_PASSIVE flags
  */
 addr_info default_hints();
+
+void free_socket_client_t(socket_client_t *sock_client);

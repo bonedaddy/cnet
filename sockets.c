@@ -9,6 +9,57 @@
 #include <unistd.h>
 
 /*!
+ * @brief creates a new client socket
+ * @todo should we enable usage of socket options
+ */
+socket_client_t *new_client_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4) {
+
+    addr_info hints;
+    memset(&hints, 0, sizeof(addr_info));
+    
+    if (tcp == true) {
+        hints.ai_socktype = SOCK_STREAM;
+    } else {
+        hints.ai_socktype = SOCK_DGRAM;
+    }
+ 
+    if (ipv4 == true) {
+        hints.ai_family = AF_INET;
+    } else {
+        hints.ai_family = AF_INET6;
+    }
+
+    //hints.ai_flags = AI_PASSIVE;
+
+    addr_info *peer_address;
+    int rc = getaddrinfo(ip, port, &hints, &peer_address);
+    if (rc != 0) {
+        freeaddrinfo(peer_address);
+        return NULL;
+    }
+
+    int client_socket_num = get_new_socket(thl, peer_address, NULL, 0, true, tcp);
+    if (client_socket_num == -1) {
+        LOG_ERROR(thl, 0, "failed to get new socket");
+        freeaddrinfo(peer_address);
+        return NULL;
+    }
+
+    socket_client_t *sock_client =
+        calloc(1, sizeof(sock_client) + sizeof(peer_address));
+    if (sock_client == NULL) {
+        LOG_ERROR(thl, 0, "failed to calloc socket_client_t");
+        return NULL;
+    }
+
+    sock_client->socket_number = client_socket_num;
+    sock_client->peer_address = peer_address;
+
+    LOG_INFO(thl, 0, "client successfully created");
+
+    return sock_client;
+}
+/*!
  * @brief attempts to create a socket listening on the specified ip and port
  * @details this is a helper function to abstract away the verbosity required to
  * create a socket
@@ -28,7 +79,7 @@ int listen_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4,
     } else {
         hints.ai_socktype = SOCK_DGRAM;
     }
-
+ 
     if (ipv4 == true) {
         hints.ai_family = AF_INET;
     } else {
@@ -43,7 +94,7 @@ int listen_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4,
         return -1;
     }
 
-    int socket_num = get_new_socket(thl, bind_address, sock_opts, 2);
+    int socket_num = get_new_socket(thl, bind_address, sock_opts, 2, false, tcp);
     freeaddrinfo(bind_address);
     if (socket_num == -1) {
         LOG_ERROR(thl, 0, "failed to get new socket");
@@ -69,7 +120,7 @@ int listen_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4,
  * address
  */
 int get_new_socket(thread_logger *thl, addr_info *bind_address,
-                   SOCKET_OPTS sock_opts[], int num_opts) {
+                   SOCKET_OPTS sock_opts[], int num_opts, bool client, bool tcp) {
     // creates the socket and gets us its file descriptor
     int listen_socket_num =
         socket(bind_address->ai_family, bind_address->ai_socktype,
@@ -116,6 +167,18 @@ int get_new_socket(thread_logger *thl, addr_info *bind_address,
                 LOG_ERROR(thl, 0, "invalid socket option");
                 return -1;
         }
+    }
+    if (client == true) {
+        if (tcp == true) {
+            /*! @todo should we do this on UDP connections?? */
+            rc = connect(listen_socket_num, bind_address->ai_addr,
+                         bind_address->ai_addrlen);
+            if (rc != 0) {
+                close(listen_socket_num);
+                return -1;
+            }
+        }
+        return listen_socket_num;
     }
     // binds the address to the socket
     bind(listen_socket_num, bind_address->ai_addr, bind_address->ai_addrlen);
@@ -177,4 +240,10 @@ addr_info default_hints() {
     // indicates to getaddrinfo we want to bind to the wildcard address
     hints.ai_flags = AI_PASSIVE;
     return hints;
+}
+
+void free_socket_client_t(socket_client_t *sock_client) {
+    close(sock_client->socket_number);
+    freeaddrinfo(sock_client->peer_address);
+    free(sock_client);
 }
