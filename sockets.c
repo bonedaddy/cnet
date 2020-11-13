@@ -1,32 +1,34 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <errno.h>
 #include "sockets.h"
 #include "deps/ulog/logger.h"
+#include <arpa/inet.h>
+#include <errno.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 /*!
-  * @brief attempts to create a socket listening on the specified ip and port
-  * @details this is a helper function to abstract away the verbosity required to create a socket
-*/
-int listen_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4, SOCKET_OPTS sock_opts[], int num_opts) {
+ * @brief attempts to create a socket listening on the specified ip and port
+ * @details this is a helper function to abstract away the verbosity required to
+ * create a socket
+ */
+int listen_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4,
+                  SOCKET_OPTS sock_opts[], int num_opts) {
     if (sock_opts == NULL || num_opts == 0) {
         LOG_ERROR(thl, 0, "empty socket opts");
         return -1;
     }
-    
+
     addr_info hints;
     memset(&hints, 0, sizeof(addr_info));
-    
+
     if (tcp == true) {
         hints.ai_socktype = SOCK_STREAM;
     } else {
         hints.ai_socktype = SOCK_DGRAM;
     }
-    
+
     if (ipv4 == true) {
         hints.ai_family = AF_INET;
     } else {
@@ -46,7 +48,7 @@ int listen_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4,
     if (socket_num == -1) {
         LOG_ERROR(thl, 0, "failed to get new socket");
     }
-    
+
     // if this is is a udp sockets, no need to start the listener
     // only tcp sockets need to do this
     if (tcp) {
@@ -61,17 +63,17 @@ int listen_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4,
 }
 
 /*! @brief  gets an available socket attached to bind_address
-  * @return Success: file descriptor socket number greater than 0
-  * @return Failure: -1
-  * initializers a socket attached to bind_address with sock_opts, and binds the address
-*/
-int get_new_socket(thread_logger *thl, addr_info *bind_address, SOCKET_OPTS sock_opts[], int num_opts) {
-     // creates the socket and gets us its file descriptor
-    int listen_socket_num = socket(
-        bind_address->ai_family,
-        bind_address->ai_socktype,
-        bind_address->ai_protocol
-    );
+ * @return Success: file descriptor socket number greater than 0
+ * @return Failure: -1
+ * initializers a socket attached to bind_address with sock_opts, and binds the
+ * address
+ */
+int get_new_socket(thread_logger *thl, addr_info *bind_address,
+                   SOCKET_OPTS sock_opts[], int num_opts) {
+    // creates the socket and gets us its file descriptor
+    int listen_socket_num =
+        socket(bind_address->ai_family, bind_address->ai_socktype,
+               bind_address->ai_protocol);
     // less than 0 is an error
     if (listen_socket_num < 0) {
         LOG_ERROR(thl, 0, "socket creation failed");
@@ -86,7 +88,8 @@ int get_new_socket(thread_logger *thl, addr_info *bind_address, SOCKET_OPTS sock
                 one = 1;
                 // set socket options before doing anything else
                 // i tried setting it after listen, but I don't think that works
-                rc = setsockopt(listen_socket_num, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
+                rc = setsockopt(listen_socket_num, SOL_SOCKET, SO_REUSEADDR, &one,
+                                sizeof(int));
                 if (rc != 0) {
                     LOG_ERROR(thl, 0, "failed to set socket reuse addr");
                     return -1;
@@ -115,11 +118,7 @@ int get_new_socket(thread_logger *thl, addr_info *bind_address, SOCKET_OPTS sock
         }
     }
     // binds the address to the socket
-    bind(
-        listen_socket_num,
-        bind_address->ai_addr,
-        bind_address->ai_addrlen
-    );
+    bind(listen_socket_num, bind_address->ai_addr, bind_address->ai_addrlen);
     if (errno != 0) {
         LOGF_ERROR(thl, 0, "socket bind failed with error %s", strerror(errno));
         return -1;
@@ -128,10 +127,11 @@ int get_new_socket(thread_logger *thl, addr_info *bind_address, SOCKET_OPTS sock
 }
 
 /*! @brief used to enable/disable blocking sockets
-  * @return Failure: false
-  * @return Success: true
-  * @note see https://stackoverflow.com/questions/1543466/how-do-i-change-a-tcp-socket-to-be-non-blocking/1549344#1549344
-*/
+ * @return Failure: false
+ * @return Success: true
+ * @note see
+ * https://stackoverflow.com/questions/1543466/how-do-i-change-a-tcp-socket-to-be-non-blocking/1549344#1549344
+ */
 bool set_socket_blocking_status(int fd, bool blocking) {
     if (fd < 0) {
         return false;
@@ -146,17 +146,15 @@ bool set_socket_blocking_status(int fd, bool blocking) {
 }
 
 /*! @brief returns the address the client is connecting from
-*/
-char  *get_name_info(sock_addr *client_address) {
+ */
+char *get_name_info(sock_addr *client_address) {
     char address_info[256]; // destroy when function returns
-    getnameinfo(
-        client_address,
-        sizeof(*client_address),
-        address_info, // output buffer
-        sizeof(address_info), // size of the output buffer
-        0, // second buffer which outputs service name
-        0, // length of the second buffer
-        NI_NUMERICHOST    // want to see hostnmae as an ip address
+    getnameinfo(client_address, sizeof(*client_address),
+                address_info,         // output buffer
+                sizeof(address_info), // size of the output buffer
+                0,                    // second buffer which outputs service name
+                0,                    // length of the second buffer
+                NI_NUMERICHOST        // want to see hostnmae as an ip address
     );
     char *addr = malloc(sizeof(address_info));
     if (addr == NULL) {
@@ -167,8 +165,8 @@ char  *get_name_info(sock_addr *client_address) {
 }
 
 /*! @brief generates an addr_info struct with defaults
-  * defaults is IPv4, TCP, and AI_PASSIVE flags
-*/
+ * defaults is IPv4, TCP, and AI_PASSIVE flags
+ */
 addr_info default_hints() {
     addr_info hints;
     memset(&hints, 0, sizeof(hints));
