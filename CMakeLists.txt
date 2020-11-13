@@ -54,6 +54,5 @@ add_library(libfdpool ./fd_pool.c ./fd_pool.h)
 target_compile_options(libfdpool PRIVATE ${flags})
 target_link_libraries(libfdpool pthread)
 
-add_executable(cli ./main.c)
-target_link_libraries(cli pthread libfdpool)
-target_compile_options(cli PRIVATE ${flags})
+add_executable(cnet-test ./cnet_test.c)
+target_link_libraries(cnet-test cmocka libfdpool pthread)

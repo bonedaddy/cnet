@@ -1,24 +1,14 @@
-#include <sys/select.h>
-#include <sys/types.h>
-#include <pthread.h>
-#include <malloc.h>
-#include <assert.h>
-#include <stdbool.h>
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <errno.h>
-#include <stdbool.h>
+#include <assert.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <setjmp.h>
+#include <cmocka.h>
 #include "fd_pool.h"
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
-
-int main(void) {
+void test_basic(void **state) {
     fd_pool_t *fpool = new_fd_pool_t();
     assert(fpool != NULL);
 
@@ -57,4 +47,12 @@ int main(void) {
     assert(udp_set_buffer[1] == 361);
 
     free_fd_pool_t(fpool);
+}
+
+
+int main(void) {
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test(test_basic),
+    };
+    return cmocka_run_group_tests(tests, NULL, NULL);
 }
