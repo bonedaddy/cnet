@@ -11,6 +11,19 @@
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
+bool stop = false;
+bool stopped = false;
+void *test_socket_wrapper(void *data) {
+    socket_client_t *sock_client = (socket_client_t *)data;
+    while (stop == false) {
+        int sent = send(sock_client->socket_number, "hello", strlen("hello"), 0);
+        assert(sent == 5);
+    }
+    free_socket_client_t(sock_client);
+    stopped = true;
+    pthread_exit(NULL);
+}
+
 void test_fd_pool(void **state) {
     typedef struct args {
         int fds[10];
@@ -192,8 +205,26 @@ void test_listen_socket(void **state) {
         sockets[i] = sock_num;
     }
     
+    socket_client_t *sock_client = new_client_socket(thl, "127.0.0.1", "5001", true, true);
+    assert(sock_client != NULL);
+    pthread_t thread;
+    pthread_create(&thread, NULL, test_socket_wrapper, sock_client);
     LOG_DEBUG(thl, 0, "getting available sockets");
     fd_set active_set_tcp, active_set_udp;
+
+    // TODO: enable better testing by testing all fds
+    for (;;) {
+        int num_active = get_active_fd_pool_t(fpool, &active_set_tcp, true, true);  // read (tcp)
+        LOGF_DEBUG(thl, 0, "found %i available fds. write %i, tcp %i", num_active, false, true);
+        if (num_active > 0) {
+            // active 
+            break;
+        }
+    } 
+
+    // trigger the socket wrapper test to exit
+    stop = true;
+
     int num_active = get_active_fd_pool_t(fpool, &active_set_tcp, true, true);  // read (tcp)
     LOGF_DEBUG(thl, 0, "found %i available fds. write %i, tcp %i", num_active, false, true);
     num_active = get_active_fd_pool_t(fpool, &active_set_tcp, true, false); // write (tcp);
@@ -203,6 +234,13 @@ void test_listen_socket(void **state) {
     num_active = get_active_fd_pool_t(fpool, &active_set_udp, false, false); // write (udp);
     LOGF_DEBUG(thl, 0, "found %i available fds. write %i, tcp %i", num_active, true, false);
 
+    // wait for client routine to exit before beginning cleanup
+    while (stopped == false) {
+        sleep(1);
+    }
+
+    pthread_exit(NULL);
+
     LOG_DEBUG(thl, 0, "closing opened sockets (if any)");
     for (int i = 0; i < 8; i++) {
         close(sockets[i]);
@@ -210,6 +248,7 @@ void test_listen_socket(void **state) {
 
     clear_thread_logger(thl);
     free_fd_pool_t(fpool);
+    
 }
 
 
