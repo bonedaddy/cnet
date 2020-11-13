@@ -52,6 +52,12 @@ int get_active_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool 
 int get_all_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp);
 
 /*!
+  * @brief returns the highest socket number
+  * @warning caller must handle locking of the mutexes
+*/
+int unsafe_max_socket_fd_pool_t(fd_pool_t *fpool, bool tcp);
+
+/*!
   * @brief checks to see if we have the given fd as part of our pool
   * @param is_tcp if true check tcp_set, if false check udp_set
 */

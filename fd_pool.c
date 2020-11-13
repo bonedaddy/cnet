@@ -9,6 +9,8 @@
 #include <stdbool.h>
 #include <malloc.h>
 #include <pthread.h>
+#include <sys/time.h>
+#include <string.h>
 #include "fd_pool.h"
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -102,6 +104,32 @@ int get_all_fd_pool_t(fd_pool_t *fpool, int *buffer, size_t buffer_len, bool tcp
         pthread_rwlock_unlock(&fpool->udp_lock);
     }
     return (int)num_items;
+}
+
+/*!
+  * @brief returns the highest socket number
+  * @warning caller must handle locking of the mutexes
+*/
+int unsafe_max_socket_fd_pool_t(fd_pool_t *fpool, bool tcp) {
+    int max = 0;
+    if (tcp) {
+        for (int i = 1; i < FD_SETSIZE-1; i++) {
+            if (FD_ISSET(i, &fpool->tcp_set)) {
+                if (i > max) {
+                    max = 1;
+                }
+            }
+        }
+    } else {
+        for (int i = 1; i < FD_SETSIZE-1; i++) {
+            if (FD_ISSET(i, &fpool->udp_set)) {
+                if (i > max) {
+                    max = 1;
+                }
+            }
+        }
+    }
+    return max;
 }
 
 /*!
