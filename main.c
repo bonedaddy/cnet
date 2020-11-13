@@ -14,6 +14,8 @@
 #include <errno.h>
 #include <stdbool.h>
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 typedef struct fd_pool {
     size_t num_tcp_fds;
     size_t num_udp_fds;
