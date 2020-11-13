@@ -123,6 +123,28 @@ bool is_set_fd_pool_t(fd_pool_t *fpool, int fd, bool is_tcp) {
 }
 
 /*!
+  * @brief copies either tcp or udp fdset
+  * @warning caller must handle locking of the mutexes
+*/
+void unsafe_copy_fd_pool_t(fd_pool_t *fpool, fd_set *dst, bool tcp) {
+    // zero the dest buffer
+    FD_ZERO(dst);
+    if (tcp) {
+        for (int i = 1; i < FD_SETSIZE-1; i++) {
+            if (FD_ISSET(i, &fpool->tcp_set)) {
+                FD_SET(i, dst);
+            }
+        }
+    } else {
+        for (int i = 1; i < FD_SETSIZE-1; i++) {
+            if (FD_ISSET(i, &fpool->udp_set)) {
+                FD_SET(i, dst);
+            }
+        }        
+    }
+}
+
+/*!
   * @param fd the file descriptor to ste within the pool
   * @param is_tcp if true check tcp_set, if false check udp_set
 */
