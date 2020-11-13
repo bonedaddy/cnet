@@ -1,3 +1,4 @@
+#pragma once
 
 #include <pthread.h>
 #include <sys/types.h>
