@@ -41,18 +41,23 @@ int listen_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4,
         return -1;
     }
 
-   
-    if (tcp) {
-        int tcp_socket_num = get_new_socket(thl, bind_address, sock_opts, 2); // TODO: set socket opts
-        freeaddrinfo(bind_address);
-        if (tcp_socket_num == -1) {
-            LOG_ERROR(thl, 0, "failed to get new tcp socket");
-        }
-        return tcp_socket_num;
-    } else { // udp not supported past here
-        freeaddrinfo(bind_address);
-        return -1;
+    int socket_num = get_new_socket(thl, bind_address, sock_opts, 2);
+    freeaddrinfo(bind_address);
+    if (socket_num == -1) {
+        LOG_ERROR(thl, 0, "failed to get new socket");
     }
+    
+    // if this is is a udp sockets, no need to start the listener
+    // only tcp sockets need to do this
+    if (tcp) {
+        rc = listen(socket_num, 10); // todo: enable customizable connection count
+        if (rc == -1) {
+            LOGF_ERROR(thl, 0, "failed to listen on tcp socket %s", strerror(errno));
+            return -1;
+        }
+    }
+
+    return socket_num;
 }
 
 /*! @brief  gets an available socket attached to bind_address
@@ -86,7 +91,7 @@ int get_new_socket(thread_logger *thl, addr_info *bind_address, SOCKET_OPTS sock
                     LOG_ERROR(thl, 0, "failed to set socket reuse addr");
                     return -1;
                 }
-                LOG_INFO(thl, 0, "set socket op REUSEADDR");
+                LOG_INFO(thl, 0, "set socket opt REUSEADDR");
                 break;
             case BLOCK:
                 passed = set_socket_blocking_status(listen_socket_num, true);
