@@ -207,8 +207,10 @@ void test_listen_socket(void **state) {
     
     socket_client_t *sock_client = new_client_socket(thl, "127.0.0.1", "5001", true, true);
     assert(sock_client != NULL);
+
     pthread_t thread;
     pthread_create(&thread, NULL, test_socket_wrapper, sock_client);
+
     LOG_DEBUG(thl, 0, "getting available sockets");
     fd_set active_set_tcp, active_set_udp;
 
@@ -239,8 +241,6 @@ void test_listen_socket(void **state) {
         sleep(1);
     }
 
-    pthread_exit(NULL);
-
     LOG_DEBUG(thl, 0, "closing opened sockets (if any)");
     for (int i = 0; i < 8; i++) {
         close(sockets[i]);
@@ -249,6 +249,7 @@ void test_listen_socket(void **state) {
     clear_thread_logger(thl);
     free_fd_pool_t(fpool);
     
+    pthread_join(thread, NULL);
 }
 
 
