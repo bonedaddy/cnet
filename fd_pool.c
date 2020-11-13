@@ -127,7 +127,7 @@ int unsafe_max_socket_fd_pool_t(fd_pool_t *fpool, bool tcp) {
         for (int i = 1; i < FD_SETSIZE - 1; i++) {
             if (FD_ISSET(i, &fpool->tcp_set)) {
                 if (i > max) {
-                    max = 1;
+                    max = i;
                 }
             }
         }
@@ -135,7 +135,7 @@ int unsafe_max_socket_fd_pool_t(fd_pool_t *fpool, bool tcp) {
         for (int i = 1; i < FD_SETSIZE - 1; i++) {
             if (FD_ISSET(i, &fpool->udp_set)) {
                 if (i > max) {
-                    max = 1;
+                    max = i;
                 }
             }
         }
