@@ -50,7 +50,10 @@ add_library(libsockets ./sockets.c ./sockets.h)
 target_compile_options(libsockets PRIVATE ${flags})
 target_link_libraries(libsockets pthread ulog)
 
+add_library(libfdpool ./fd_pool.c ./fd_pool.h)
+target_compile_options(libfdpool PRIVATE ${flags})
+target_link_libraries(libfdpool pthread)
 
 add_executable(cli ./main.c)
-target_link_libraries(cli pthread)
+target_link_libraries(cli pthread libfdpool)
 target_compile_options(cli PRIVATE ${flags})
