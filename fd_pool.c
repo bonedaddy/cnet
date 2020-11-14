@@ -86,7 +86,7 @@ int get_active_fd_pool_t(fd_pool_t *fpool, fd_set *check_set, bool tcp, bool rea
     if (num_active < 0) {
         printf("socket select failed with error %s\n", strerror(errno));
     }
-    
+
     return num_active;
 }
 
