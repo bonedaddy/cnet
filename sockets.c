@@ -24,17 +24,18 @@
  * @brief creates a new client socket
  * @todo should we enable usage of socket options
  */
-socket_client_t *new_client_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4) {
+socket_client_t *new_client_socket(thread_logger *thl, char *ip, char *port,
+                                   bool tcp, bool ipv4) {
 
     addr_info hints;
     memset(&hints, 0, sizeof(addr_info));
-    
+
     if (tcp == true) {
         hints.ai_socktype = SOCK_STREAM;
     } else {
         hints.ai_socktype = SOCK_DGRAM;
     }
- 
+
     if (ipv4 == true) {
         hints.ai_family = AF_INET;
     } else {
@@ -72,6 +73,23 @@ socket_client_t *new_client_socket(thread_logger *thl, char *ip, char *port, boo
 
     return sock_client;
 }
+
+/*!
+ * @brief used to accept a connection queued up against the given socket
+ * @details it accepts an incoming connection on the socket returning
+ * @details the socket number that can be used to communicate on this connection
+ */
+int accept_socket(thread_logger *thl, int socket) {
+    sock_addr_storage incoming_address;
+    socklen_t addr_size = sizeof(incoming_address);
+    int new_fd = accept(socket, (struct sockaddr *)&incoming_address, &addr_size);
+    if (new_fd == -1) {
+        LOGF_ERROR(thl, 0, "failed to accept connection %s", strerror(errno));
+        return -1;
+    }
+    return new_fd;
+}
+
 /*!
  * @brief attempts to create a socket listening on the specified ip and port
  * @details this is a helper function to abstract away the verbosity required to
@@ -92,7 +110,7 @@ int listen_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4,
     } else {
         hints.ai_socktype = SOCK_DGRAM;
     }
- 
+
     if (ipv4 == true) {
         hints.ai_family = AF_INET;
     } else {

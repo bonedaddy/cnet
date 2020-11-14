@@ -55,7 +55,6 @@ typedef struct socket_client {
     addr_info *peer_address;
 } socket_client_t;
 
-
 /*! @enum SOCKET_OPTS
  * @brief used to configure new sockets
  */
@@ -75,7 +74,15 @@ int default_socket_opts_count = 2;
  * @brief creates a new client socket
  * @todo should we enable usage of socket options
  */
-socket_client_t *new_client_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4);
+socket_client_t *new_client_socket(thread_logger *thl, char *ip, char *port,
+                                   bool tcp, bool ipv4);
+
+/*!
+ * @brief used to accept a connection queued up against the given socket
+ * @details it accepts an incoming connection on the socket returning
+ * @details the socket number that can be used to communicate on this connection
+ */
+int accept_socket(thread_logger *thl, int socket);
 
 /*!
  * @brief attempts to create a socket listening on the specified ip and port
@@ -93,7 +100,7 @@ int listen_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4,
  */
 int get_new_socket(thread_logger *thl, addr_info *bind_address,
                    SOCKET_OPTS sock_opts[], int num_opts, bool client, bool tcp);
-                   
+
 /*! @brief used to enable/disable blocking sockets
  * @return Failure: false
  * @return Success: true
