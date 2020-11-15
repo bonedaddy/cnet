@@ -82,11 +82,21 @@ socket_client_t *new_client_socket(thread_logger *thl, char *ip, char *port,
 int accept_socket(thread_logger *thl, int socket) {
     sock_addr_storage incoming_address;
     socklen_t addr_size = sizeof(incoming_address);
+    
     int new_fd = accept(socket, (struct sockaddr *)&incoming_address, &addr_size);
     if (new_fd == -1) {
         LOGF_ERROR(thl, 0, "failed to accept connection %s", strerror(errno));
         return -1;
     }
+
+    char hoststr[1025];
+    char portstr[32];
+
+    int rc = getnameinfo((struct sockaddr *)&incoming_address, addr_size, hoststr, sizeof(hoststr), portstr, sizeof(portstr), NI_NUMERICHOST | NI_NUMERICSERV);
+    if (rc == 0) {
+        LOGF_DEBUG(thl, 0, "accepted connection. ip: %s, port %s", hoststr, portstr);
+    }
+    
     return new_fd;
 }
 
