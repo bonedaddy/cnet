@@ -247,15 +247,65 @@ void test_listen_socket(void **state) {
 
     clear_thread_logger(thl);
     free_fd_pool_t(fpool);
-    
+
     pthread_join(thread, NULL);
 }
 
+void test_listen_accept(void **state) {
+    // reset variables
+    stop = false;
+    stopped = false;
+
+   fd_pool_t *fpool = new_fd_pool_t();
+    assert(fpool != NULL);
+
+    thread_logger *thl = new_thread_logger(true);
+    assert(thl != NULL);
+
+    int fd = listen_socket(thl, "127.0.0.1", "5001", true, true, default_sock_opts, default_socket_opts_count);
+    assert(fd > 0);
+
+    set_fd_pool_t(fpool, fd, true);
+
+    socket_client_t *sock_client = new_client_socket(thl, "127.0.0.1", "5001", true, true);
+    assert(sock_client != NULL);
+
+    pthread_t thread;
+    pthread_create(&thread, NULL, test_socket_wrapper, sock_client);
+
+    
+    
+    for (;;) {
+        fd_set active_set;
+        int num_active = get_active_fd_pool_t(fpool, &active_set, true, true);
+        switch (num_active) {
+            case -1:
+                LOG_ERROR(thl, 0, "failed to get active fds");
+            case 0:
+                sleep(1);
+                continue;
+            default:
+                LOG_DEBUG(thl, 0, "found active fd");
+                break;
+        }
+        assert(FD_ISSET(fd, &active_set));
+        int conn_fd = accept_socket(thl, fd);
+        assert(conn_fd > 0);
+        close(conn_fd);
+        break;
+    }
+    stop = true;
+    while (stopped == false) {
+        sleep(1);
+    }
+    pthread_join(thread, NULL);
+}
 
 int main(void) {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_fd_pool),
         cmocka_unit_test(test_listen_socket),
+        cmocka_unit_test(test_listen_accept)
     };
     return cmocka_run_group_tests(tests, NULL, NULL);
 }
