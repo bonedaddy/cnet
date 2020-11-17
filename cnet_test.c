@@ -291,6 +291,15 @@ void test_listen_accept(void **state) {
         assert(FD_ISSET(fd, &active_set));
         int conn_fd = accept_socket(thl, fd);
         assert(conn_fd > 0);
+        char buffer[1024];
+        memset(buffer, 0, 1024);
+        int rc = read(conn_fd, buffer, sizeof(buffer));
+        if (rc == -1) {
+            LOGF_ERROR(thl, 0, "failed to read data: %s", strerror(errno));
+            break;
+        }
+        assert(rc > 0);
+        LOGF_DEBUG(thl, 0, "receive message: %s", buffer);
         close(conn_fd);
         break;
     }
