@@ -298,6 +298,9 @@ void test_listen_accept(void **state) {
     while (stopped == false) {
         sleep(1);
     }
+    close(fd);
+    free_fd_pool_t(fpool);
+    clear_thread_logger(thl);
     pthread_join(thread, NULL);
 }
 
