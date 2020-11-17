@@ -13,10 +13,10 @@
 /*! @file colors.h
  * @brief macros and utilities for printing color to stdout
  * from https://www.quora.com/How-do-I-print-a-colored-output-in-C
- * Pass a `COLORS_x` enum value into `print_colored` and the color will be
- * printed on stdout Note that if you want to disable printing of that color
- * you'll have to send the `COLORS_RESET` enum value through to make non-bold
- * change 0->1 (0;31m red) vs (1;31m bold red)
+ * Pass a `COLORS_x` enum value into `print_colored` and the color will be printed on
+ * stdout Note that if you want to disable printing of that color you'll have to send
+ * the `COLORS_RESET` enum value through to make non-bold change 0->1 (0;31m red) vs
+ * (1;31m bold red)
  */
 
 #pragma once
@@ -36,9 +36,9 @@
 extern "C" {
 #endif
 
-/*! @brief allows short-handed references to ANSI color schemes, and enables
- * easier color selection anytime you want to extend the available colors with
- * an additional enum, add a switch case in get_ansi_color_scheme
+/*! @brief allows short-handed references to ANSI color schemes, and enables easier
+ * color selection anytime you want to extend the available colors with an additional
+ * enum, add a switch case in get_ansi_color_scheme
  */
 typedef enum {
     COLORS_RED,
@@ -52,8 +52,8 @@ typedef enum {
 } COLORS;
 
 /*! @brief prefixes a message with the given ANSI color code
- * @return Success: char pointer containing the message prefixed with the ANSI
- * color code
+ * @return Success: char pointer containing the message prefixed with the ANSI color
+ * code
  * @return Failure: NULL pointer
  * @note you must free up the allocate memory for the returned vlaue
  */

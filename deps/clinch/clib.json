@@ -1,0 +1,14 @@
+{
+  "name": "clinch",
+  "version": "0.0.2",
+  "repo": "bonedaddy/clinch",
+  "dependencies": {
+    "bonedaddy/ulog": "v0.0.3-rc3",
+    "bonedaddy/argtable3": "v0.0.5"
+  },
+  "src": [
+    "src/command_line.h",
+    "src/command_line.c",
+    "src/CMakeLists.txt"
+  ]
+}

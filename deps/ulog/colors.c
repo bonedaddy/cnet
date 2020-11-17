@@ -48,8 +48,8 @@ char *get_ansi_color_scheme(COLORS color) {
 }
 
 /*! @brief prefixes a message with the given ANSI color code
- * @return Success: char pointer containing the message prefixed with the ANSI
- * color code
+ * @return Success: char pointer containing the message prefixed with the ANSI color
+ * code
  * @return Failure: NULL pointer
  * @note you must free up the allocate memory for the returned vlaue
  */
