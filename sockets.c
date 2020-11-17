@@ -27,23 +27,7 @@
 socket_client_t *new_client_socket(thread_logger *thl, char *ip, char *port,
                                    bool tcp, bool ipv4) {
 
-    addr_info hints;
-    memset(&hints, 0, sizeof(addr_info));
-
-    if (tcp == true) {
-        hints.ai_socktype = SOCK_STREAM;
-    } else {
-        hints.ai_socktype = SOCK_DGRAM;
-    }
-
-    if (ipv4 == true) {
-        hints.ai_family = AF_INET;
-    } else {
-        hints.ai_family = AF_INET6;
-    }
-
-    // todo: should we do this?
-    hints.ai_flags = AI_PASSIVE;
+    addr_info hints = new_addr_info_hints(ipv4, tcp, true);
 
     addr_info *peer_address;
     int rc = getaddrinfo(ip, port, &hints, &peer_address);
@@ -82,7 +66,7 @@ socket_client_t *new_client_socket(thread_logger *thl, char *ip, char *port,
 int accept_socket(thread_logger *thl, int socket) {
     sock_addr_storage incoming_address;
     socklen_t addr_size = sizeof(incoming_address);
-    
+
     int new_fd = accept(socket, (struct sockaddr *)&incoming_address, &addr_size);
     if (new_fd == -1) {
         LOGF_ERROR(thl, 0, "failed to accept connection %s", strerror(errno));
@@ -92,11 +76,13 @@ int accept_socket(thread_logger *thl, int socket) {
     char hoststr[1025];
     char portstr[32];
 
-    int rc = getnameinfo((struct sockaddr *)&incoming_address, addr_size, hoststr, sizeof(hoststr), portstr, sizeof(portstr), NI_NUMERICHOST | NI_NUMERICSERV);
+    int rc = getnameinfo((struct sockaddr *)&incoming_address, addr_size, hoststr,
+                         sizeof(hoststr), portstr, sizeof(portstr),
+                         NI_NUMERICHOST | NI_NUMERICSERV);
     if (rc == 0) {
         LOGF_DEBUG(thl, 0, "accepted connection. ip: %s, port %s", hoststr, portstr);
     }
-    
+
     return new_fd;
 }
 
@@ -112,20 +98,7 @@ int listen_socket(thread_logger *thl, char *ip, char *port, bool tcp, bool ipv4,
         return -1;
     }
 
-    addr_info hints;
-    memset(&hints, 0, sizeof(addr_info));
-
-    if (tcp == true) {
-        hints.ai_socktype = SOCK_STREAM;
-    } else {
-        hints.ai_socktype = SOCK_DGRAM;
-    }
-
-    if (ipv4 == true) {
-        hints.ai_family = AF_INET;
-    } else {
-        hints.ai_family = AF_INET6;
-    }
+    addr_info hints = new_addr_info_hints(ipv4, tcp, false);
 
     addr_info *bind_address;
 
@@ -268,18 +241,28 @@ char *get_name_info(sock_addr *client_address) {
     return addr;
 }
 
-/*! @brief generates an addr_info struct with defaults
- * defaults is IPv4, TCP, and AI_PASSIVE flags
+/*!
+ * @brief generates an addr_info struct with settings for
+ * being used to socket creation
  */
-addr_info default_hints() {
+addr_info new_addr_info_hints(bool ipv4, bool tcp, bool client) {
     addr_info hints;
     memset(&hints, 0, sizeof(hints));
-    // change to AF_INET6 to use IPv6
-    hints.ai_family = AF_INET;
-    // indicates TCP, if you want UDP use SOCKT_DGRAM
-    hints.ai_socktype = SOCK_STREAM;
-    // indicates to getaddrinfo we want to bind to the wildcard address
-    hints.ai_flags = AI_PASSIVE;
+    if (ipv4) {
+        hints.ai_family = AF_INET;
+    } else {
+        hints.ai_family = AF_INET6;
+    }
+    if (tcp) {
+        hints.ai_socktype = SOCK_STREAM;
+    } else {
+        hints.ai_socktype = SOCK_DGRAM;
+    }
+    // todo enable ai_flags control this is rudimentary
+    if (client) {
+        // indicates bind to wildcard address
+        hints.ai_flags = AI_PASSIVE;
+    }
     return hints;
 }
 

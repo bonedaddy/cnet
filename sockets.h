@@ -113,9 +113,10 @@ bool set_socket_blocking_status(int fd, bool blocking);
  */
 char *get_name_info(sock_addr *client_address);
 
-/*! @brief generates an addr_info struct with defaults
- * defaults is IPv4, TCP, and AI_PASSIVE flags
+/*!
+ * @brief generates an addr_info struct with settings for
+ * being used to socket creation
  */
-addr_info default_hints();
+addr_info new_addr_info_hints(bool ipv4, bool tcp, bool client);
 
 void free_socket_client_t(socket_client_t *sock_client);
