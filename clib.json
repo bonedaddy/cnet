@@ -11,7 +11,7 @@
   ],
   "dependencies": {
     "pthreads": "",
-    "bonedaddy/ulog": "0.0.3-rc2"
+    "bonedaddy/ulog": "0.0.3-rc3"
   },
   "src": [
     "./fd_pool.h",
