@@ -36,19 +36,14 @@ endif()
 
 list(APPEND flags -D_POSIX_C_SOURCE=201112L)
 
+include(./deps/ulog/CMakeLists.txt)
+include(./deps/argtable3/CMakeLists.txt)
+include(./deps/clinch/CMakeLists.txt)
 
-file(GLOB_RECURSE ULOG_SOURCES
-    ./deps/ulog/*.h
-    ./deps/ulog/*.c
-)
-
-add_library(ulog ${ULOG_SOURCES})
-target_compile_options(ulog PRIVATE ${flags})
-target_link_libraries(ulog pthread)
 
 add_library(libsockets SHARED ./sockets.c ./sockets.h)
 target_compile_options(libsockets PRIVATE ${flags})
-target_link_libraries(libsockets pthread ulog)
+target_link_libraries(libsockets pthread libulog)
 
 add_library(libfdpool ./fd_pool.c ./fd_pool.h)
 target_compile_options(libfdpool PRIVATE ${flags})
@@ -58,5 +53,8 @@ target_link_libraries(libfdpool pthread)
 add_executable(cnet-test ./cnet_test.c)
 target_link_libraries(cnet-test cmocka libfdpool libsockets pthread)
 add_test(NAME CnetTest COMMAND cnet-test)
+
+add_executable(cli ./main.c)
+target_link_libraries(cli libargtable3 libulog libclinch libsockets libfdpool)
 
 enable_testing()
