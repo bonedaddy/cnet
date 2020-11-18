@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/include",
                 "/usr/include",
-                "/usr/include"
+                "/usr/include",
+                "${workspaceFolder}/deps/**"
             ],
             "defines": [
                 "__linux__",

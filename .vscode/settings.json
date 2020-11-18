@@ -23,7 +23,8 @@
         "initializer_list": "c",
         "cerrno": "c",
         "system_error": "c",
-        "logger.h": "c"
+        "logger.h": "c",
+        "command_line.h": "c"
     },
     "C_Cpp.default.cStandard": "c18",
     "devskim.enableBestPracticeRules": true,
